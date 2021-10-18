@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.MemberDAO">
+	
+	 <select id="checkUser" parameterType="java.lang.String" resultType="java.lang.String">
+	 
+  		select 
+  			name 
+  		from 
+  			member 
+  		where 
+  			name = #{name}
+  			
+	 </select>
+	
+	 <insert id="memberRegist" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO"> 
+        insert into 
+		
+			member
+			 
+		values(
+			0,
+			#{email},
+			#{name},
+			#{password},
+			#{img},
+			#{status},
+			#{emailAuth},
+			#{universityId}	
+		)
+		
+    </insert>
+	
+	<select id="getLoginUser" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO" resultType="com.teamproject.StudentCommunity.dto.MemberDTO">
+    	SELECT * FROM member WHERE email=#{email}
+    </select>
+    
+    <select id="getUserInfo" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO" resultType="com.teamproject.StudentCommunity.dto.MemberDTO">
+    	SELECT * FROM member WHERE email=#{email}
+    </select>
+    
+    <select id="getAdmin" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO" resultType="com.teamproject.StudentCommunity.dto.MemberDTO">
+    	SELECT * FROM member WHERE email=#{email} AND password=#{password}
+    </select>
+    
+     <select id="getUserDel" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO" resultType="com.teamproject.StudentCommunity.dto.MemberDTO">
+       SELECT * FROM member WHERE email=#{email}
+    </select>
+    
+    <delete id="deleteMemberInfo" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO">
+      DELETE FROM member WHERE email=#{email}
+   </delete>
+
+	<delete id="deleteMember" parameterType="long">
+		DELETE FROM member WHERE id=#{id}
+	</delete>
+
+   <update id="updateMemberInfo" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO">
+      UPDATE member SET name=#{name}, password=#{password}, img=#{img} WHERE id=#{id}
+   </update>
+	
+	<update id="changeActive" parameterType="long">
+    	update member
+    	set status = 'ACTIVE'
+    	where id = #{memberId}
+    </update>
+
+	<update id="updatePassword" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO">
+		update member
+		set password = #{password}
+		where email = #{email}
+	</update>
+    
+    <update id="updateName" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO">
+      update member
+      set name = #{name}
+      where email = #{email}
+    </update>
+    
+    <update id="changeDeActive" parameterType="long">
+    	update member
+    	set status = 'DE_ACTIVE'
+    	where id = #{memberId}
+    </update>
+    
+    <select id="checkEmail" parameterType="String" resultType="String">
+    	SELECT email FROM member WHERE email=#{email};
+    </select>
+    
+  <select id="findUserInfoById" parameterType="long" resultType="com.teamproject.StudentCommunity.dto.MemberDTO">
+    	SELECT * FROM member WHERE id=#{id}
+    </select>
+  
+
+	
+	<update id ="updateImage" parameterType="com.teamproject.StudentCommunity.dto.MemberDTO">
+		UPDATE member SET img=#{img} WHERE id=#{id}
+	</update>
+
+
+	<select id="findAllMember" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO" parameterType="com.teamproject.StudentCommunity.dto.PageDTO">
+		SELECT id,name,email,status from member where status != 'ADMIN'
+		<if test='input != null and input != "" '>
+			<if test='select =="email"'>
+				and email like CONCAT('%',#{input},'%')
+			</if>
+			<if test='select =="name"'>
+				and name like CONCAT('%',#{input},'%')
+			</if>
+		</if>
+
+		<if test="showSuspend == 0">
+			and status = "ACTIVE"
+		</if>
+
+		<if test='showSuspend =="1"'>
+			and status = "DE_ACTIVE"
+		</if>
+
+		limit #{firstRecordIndex},#{lastRecordIndex};
+	</select>
+
+	<select id="getTotalCountMember"  parameterType="com.teamproject.StudentCommunity.dto.PageDTO" resultType="int">
+		SELECT count(*) from member where status != 'ADMIN'
+		<if test='input != null and input != "" '>
+			<if test='select =="email"'>
+				and email like CONCAT('%',#{input},'%')
+			</if>
+			<if test='select =="name"'>
+				and name like CONCAT('%',#{input},'%')
+			</if>
+		</if>
+
+		<if test="showSuspend == 0">
+			and status = "ACTIVE"
+		</if>
+
+		<if test='showSuspend =="1"'>
+			and status = "DE_ACTIVE"
+		</if>
+	</select>
+
+
+	<select id="getMemberNameEmail" parameterType="com.teamproject.StudentCommunity.dto.MemberSearchDTO">
+		select email, name from member;
+	</select>
+
+
+
+</mapper>

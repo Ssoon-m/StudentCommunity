@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.CourseRatingDAO">
+
+    <select id="findByCourseId" resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" parameterType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingPagingDTO">
+        select * from course_rating
+        where course_id = #{courseId}
+        order by member_id=#{memberId} desc,created_at desc
+        limit #{startNo},#{limit}
+    </select>
+
+    <select id="countByCourseId" resultType="Integer" parameterType="Long">
+        select count(*) from course_rating
+        where course_id = #{courseId}
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" parameterType="Long">
+        select * from course_rating
+        where id = #{id}
+    </select>
+
+    <select id="findByMemberCourseId" resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" parameterType="Long">
+        select * from course_rating
+        where course_id = #{courseId}
+        and member_id = #{memberId}
+    </select>
+
+    <select id="findNew" resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" parameterType="Long">
+        select cr.*,c.name from course_rating as cr
+        join course as c on c.id = cr.course_Id
+        join university_major as um on c.university_major_id = um.id
+        where um.university_id = #{university_id}
+        order by created_at desc
+        limit 0,4;
+    </select>
+
+
+    <insert id="newCourseRating" parameterType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO">
+        insert into course_rating(rating,comment,created_at,member_id,course_id)
+        values (#{rating},#{comment},#{createdAt},#{memberId},#{courseId})
+    </insert>
+
+    <delete id="deleteById" parameterType="Long">
+        delete from course_rating
+        where id = #{id}
+    </delete>
+
+    <update id="updateCourseRating" parameterType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO">
+        update course_rating
+        set rating = #{rating},
+        comment = #{commnet}
+        where id = #{id}
+    </update>
+    
+    <select id="getCourseIdCount" parameterType="com.teamproject.StudentCommunity.dto.PageDTO" resultType="int" 
+   				>
+   	select  
+   	count(*)
+   
+    from course_rating as cr
+    join course as c on cr.course_id =c.id
+    join university_major as um on um.id = c.university_major_id
+    join member as me on	cr.member_id = me.id
+    
+    join major as m on m.id = um.major_id
+   
+    
+     <if test='selectUniversity != null and selectUniversity != "" '>
+        	 and me.university_id = #{selectUniversity}
+        	 
+        	 
+     </if> 
+     <if test='courseList != null and courseList != "" '>
+        	 and m.id = #{courseList}
+      </if>
+     <if test='input != null and input != "" '>
+     
+             <if test='select =="courseName"'>
+                and c.name like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="comment"'>
+                and cr.comment like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+            	and me.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+	
+	
+	   
+	  </select>
+
+     <select id="getCourseId" parameterType="com.teamproject.StudentCommunity.dto.PageDTO"
+     resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" 
+   				>
+   	select cr.*, m.id, m.name as categoryName , me.email as email, c.name as courseName
+    from course_rating as cr
+    join course as c on cr.course_id =c.id
+    join university_major as um on um.id = c.university_major_id
+    join member as me on	cr.member_id = me.id
+    
+    join major as m on m.id = um.major_id
+   
+    
+     <if test='selectUniversity != null and selectUniversity != "" '>
+        	 and me.university_id = #{selectUniversity}
+        	 
+        	 
+     </if> 
+     <if test='courseList != null and courseList != "" '>
+        	 and m.id = #{courseList}
+      </if>
+     <if test='input != null and input != "" '>
+     
+             <if test='select =="courseName"'>
+                and c.name like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="comment"'>
+                and cr.comment like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+            	and me.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+        
+        order by cr.id asc
+	
+	limit #{firstRecordIndex},#{lastRecordIndex};
+	   
+	  </select>
+    
+    <select id="autoCourse" 
+     resultType="com.teamproject.StudentCommunity.dto.courseRating.CourseRatingDTO" >
+    select cr.*, m.id as category, m.name as categoryName , me.email as email, c.name as courseName
+    from course_rating as cr
+    join course as c on cr.course_id =c.id
+    join university_major as um on um.id = c.university_major_id
+    join member as me on	cr.member_id = me.id
+    join major as m on m.id = um.major_id;
+    
+    </select>
+    
+    
+
+</mapper>

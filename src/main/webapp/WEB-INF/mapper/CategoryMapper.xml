@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.CategoryDAO">
+    <insert id="insertCategory"  parameterType="com.teamproject.StudentCommunity.dto.CategoryDTO" keyProperty="id" useGeneratedKeys="true">
+            insert into category
+            values(
+                   0,#{name},#{description}
+                   )
+    </insert>
+
+    <delete id="deleteCategory" parameterType="long">
+        delete from
+            category
+        where id = #{id}
+    </delete>
+
+
+</mapper>

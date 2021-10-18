@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.ReplyDetailDAO">
+
+
+
+
+    <select id="findByMemberReplyId" resultType="com.teamproject.StudentCommunity.dto.replyDetail.ReplyDetailDTO"
+            parameterType="Long">
+        select * from
+            reply_detail
+        where member_id = #{memberId}
+          and reply_id = #{replyId}
+    </select>
+
+
+
+
+    <!-- 새로운 좋아요 or 싫어요 저장 -->
+    <insert id="insertReplyDetail" parameterType="com.teamproject.StudentCommunity.dto.replyDetail.ReplyDetailDTO">
+        insert into
+            reply_detail(status,created_at,reply_id,member_id)
+        values(#{status},#{createdAt},#{replyId},#{memberId})
+    </insert>
+
+    <delete id="deleteById" parameterType="Long">
+        delete from reply_detail
+        where id = #{id};
+    </delete>
+
+
+
+</mapper>

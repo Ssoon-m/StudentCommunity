@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.CourseDAO">
+
+    <select id="findByUniversityId" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO" parameterType="Long">#
+    select c.*,(select avg(rating) from course_rating as cr where cr.course_id = c.id) as avgRating
+         ,(select count(*) from course_rating as cr where cr.course_id = c.id) as totalCount
+         ,m.name as categoryName
+    from course as c
+             join university_major as um on c.university_major_id = um.id
+             join major  as m on m. id = um.major_id
+    where um.university_id = #{universityId}
+    order by avgRating desc
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO" parameterType="Long">
+        select *,(select avg(rating) from course_rating as cr where cr.course_id = c.id) as avgRating
+                ,(select count(*) from course_rating as cr where cr.course_id = c.id) as totalCount
+        from course as c
+        where c.id = #{id}
+    </select>
+   
+    <select id="courseByUniversityId"
+		resultType="com.teamproject.StudentCommunity.dto.Course.CourseCategoryDTO"
+		parameterType="Long">
+		select u.* , m.id, m.name
+        from university_major as u
+        join major as m on u.major_id = m.id
+        where u.university_id = #{universityId};
+	
+	</select>
+    
+    
+    
+
+
+    <select id="findCategoryName" parameterType="long" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO">
+        select DISTINCT c.course_category_id as courseCategoryId , cc.name as categoryName
+        from course c inner join course_category cc on c.course_category_id = cc.id
+        where university_id = #{universityId};
+    </select>
+
+    <select id="selectCourseName" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO">
+        select * from course where university_major_id in (select id from university_major where university_id = #{universityId});
+    </select>
+
+	<select id="getMajorList" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO">
+        select * from course where university_major_id in (select id from university_major where university_id = #{universityId}) and university_major_id = 2;
+    </select>
+
+	<select id="getNotMajorList" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.Course.CourseDTO">
+        select * from course where university_major_id in (select id from university_major where university_id = #{universityId}) and university_major_id = 1;
+    </select>
+</mapper>

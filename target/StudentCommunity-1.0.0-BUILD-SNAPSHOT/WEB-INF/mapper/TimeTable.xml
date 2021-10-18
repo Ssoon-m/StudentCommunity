@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.TimeTableDAO">
+
+	<select id="getTimeTableID" parameterType="com.teamproject.StudentCommunity.dto.TimeTableDTO" resultType="Long">
+		select id from timetable where member_id=#{member_id} and semester=#{semester};
+	</select>
+
+	<select id="getSubjectList" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.SubjectTimeTableDTO">
+		select * from subject_table where timetable_id=#{timetable_id};
+	</select>
+
+	<select id="getTimeList" parameterType="Long" resultType="String">
+		select rowColumn from rowColumn_table where subject_id=#{subjectId};
+	</select>
+
+	<insert id="insertRcTable" parameterType="com.teamproject.StudentCommunity.dto.RowColumnTimeTableDTO">
+		insert into rowColumn_table values(0,#{rowColumn},#{subjectId})
+	</insert>
+
+	<insert id="insertSubjectTable"  parameterType="com.teamproject.StudentCommunity.dto.SubjectTimeTableDTO" keyProperty="id" useGeneratedKeys="true">
+		insert into subject_table
+		values(
+				  0, #{subjectName}, #{color}, #{timeTableId}, #{courseId}
+			  )
+	</insert>
+
+	<insert id="insertTimetable" parameterType="com.teamproject.StudentCommunity.dto.TimeTableDTO" keyProperty="id" useGeneratedKeys="true">
+		insert into
+			timetable
+		values
+			(0,#{semester},#{member_id});
+	</insert>
+
+	<delete id="deleteSubjectTableByTimeTableID" parameterType="Long">
+		delete from subject_table where timetable_id = #{timetable_id};
+	</delete>
+</mapper>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.PostDAO">
+
+    <select id="findAll" resultType="com.teamproject.StudentCommunity.dto.post.Post">
+        select  *
+        from post
+        order by created_at desc
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.post.Post" parameterType="Long">
+        select  p.*,m.name,m.img,m.id
+        from post as p
+        join member as m on p.member_id = m.id
+        where p.id = #{id}
+    </select>
+
+
+    <select id="findByMemberId" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO" parameterType="com.teamproject.StudentCommunity.dto.post.PostMemberSearchDTO">
+        select p.*,c.name as categoryName
+        from post as p
+                 join board as b on p.board_id = b.id
+                 join category as c on c.id = b.category_id
+        where p.member_id = #{memberId}
+        order by p.created_at desc
+        limit #{startNo},#{limit}<!--limit  = 인덱스 시작 위치,그 위치부터 몇개 가져올 껀지-->
+    </select>
+
+    <!-- 이틀 전에 쓴 글 제외하고 이후에 쓴 글중 좋아요와 조회수 순 -->
+    <select id="findPopularPosts" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO" parameterType="Long">
+        select p.*,(select count(*) from reply as r where r.post_id = p.id) as totalReply from post as p                                                                                  join board as b on b.id = p.board_id
+        where b.university_id = #{universityId}
+          and p.created_at > date_add(now(), interval -2 day)
+        order by good desc, views desc
+        limit 0,2;
+    </select>
+
+
+    <select id="countByMemberId" resultType="int" parameterType="Long">
+        select count(*)
+        from post
+        where member_id = #{memberId}
+    </select>
+
+
+    <update id="updatePost" parameterType="com.teamproject.StudentCommunity.dto.post.UpdatePost">
+        update post set
+        title = #{title},
+        content = #{content},
+        updated_at = #{updatedAt},
+        anonymous = #{anonymous}
+        where id = #{postId}
+    </update>
+
+
+    <select id="findByBoardId" resultType="com.teamproject.StudentCommunity.dto.post.Post" parameterType="Long">
+        select  *
+        from post
+        where board_id = #{boardId}
+        order by created_at desc
+    </select>
+
+<!--    여기서 부터 조인이 들어가야 됨-->
+    <!--dynamic 실제 데이터를 가져오는 부분 조건에 맞는 데이터를 찾는다.-->
+    <select id="findByPostSearch" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO"
+            parameterType="com.teamproject.StudentCommunity.dto.post.PostSearch">
+        select  p.*,
+               m.name as name,
+               (select count(*) from reply as r where r.post_id = p.id) as totalReply
+        from post as p
+        join member as m on p.member_id = m.id
+        where p.board_id = #{boardId}
+        <if test='input != null'>
+            <if test='select =="title"'>
+                and title like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="titleContent"'>
+                and (title like CONCAT('%',#{input},'%') or content like CONCAT('%',#{input},'%'))
+            </if>
+
+            <if test='select =="content"'>
+                and content like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+
+        <if test="order ==  null">
+        order by created_at desc
+        </if>
+        <if test="order !=  null">
+        order by ${order} desc
+        </if>
+         limit #{startNo},#{limit}<!--limit  = 인덱스 시작 위치,그 위치부터 몇개 가져올 껀지-->
+    </select>
+
+    <!--질의 결과는 인덱싱에 상관없이 * 가 가장 빠르다..-->
+    <select id="countByPostSearch" resultType="int" parameterType="com.teamproject.StudentCommunity.dto.post.PostSearch">
+        select  count(*)
+        from post
+        where board_id = #{boardId}
+        <if test='input != null'>
+            <if test='select =="title"'>
+                and title like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="titleContent"'>
+                and (title like CONCAT('%',#{input},'%') or content like CONCAT('%',#{input},'%'))
+            </if>
+
+            <if test='select =="content"'>
+                and content like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+    </select>
+
+
+
+    <!-- 새로운 글 등록 -->
+    <insert id="newPost" parameterType="com.teamproject.StudentCommunity.dto.post.NewPost" keyProperty="id" useGeneratedKeys="true">
+        insert into
+            post(title,content,created_at,member_id,board_id,anonymous)
+        values(#{title},#{content},#{createdAt},#{memberId},#{boardId},#{anonymous})
+    </insert>
+
+    <!--게시글은 삭제할 경우 그냥 삭제 댓글의 경우만 대댓글이 달린 상태이면 "?"에의해 삭제된 댓글입니다.-->
+    <delete id="deletePost" parameterType="Long">
+        delete from post where 
+        	
+        id = #{postId}
+    </delete>
+    
+    <delete id="deleteList" parameterType="Long">
+        delete from post where
+        id = #{postId}
+    </delete>
+    
+    <delete id="deleteDeActiveMember" parameterType="Long">
+        delete from post where
+        member_id = #{memberId}
+    </delete>
+    
+
+    <select id="countGoodReport" resultType="int" parameterType="com.teamproject.StudentCommunity.dto.postDetail.PostDetail">
+        select ${status} from post
+        where id = #{postId}
+    </select>
+
+
+    <update id="goodReportPlus" parameterType="com.teamproject.StudentCommunity.dto.postDetail.PostDetail">
+        update post set ${status} = post.${status}+1
+        where id = #{postId}
+    </update>
+
+    <update id="goodReportMinus" parameterType="com.teamproject.StudentCommunity.dto.postDetail.PostDetail">
+        update post set ${status} = post.${status}-1
+        where id = #{postId}
+    </update>
+
+    <update id="viewsPlusById" parameterType="Long">
+        update post set views = views+1
+        where id = #{id}
+    </update>
+
+	<select id="getMyPostList" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO">
+		select * from post where member_id=#{member_id}
+	</select>
+	
+	<select id="getMyReplyPostList" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO">
+		select * from post where id in (select post_id from reply where parent in (select id from reply where member_id=#{member_id}))
+	</select>
+</mapper>

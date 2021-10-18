@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.BoardDAO">
+
+    <select id="findAll" resultType="com.teamproject.StudentCommunity.dto.board.BoardDto">
+        select  *
+        from board
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.board.BoardDto">
+        select  b.*,c.name as categoryName
+        from board as b
+        join category as c on c.id = b.category_id
+        where b.id = #{id}
+    </select>
+
+    <select id="findByUniversityId" resultType="com.teamproject.StudentCommunity.dto.board.BoardDto">
+        select  *
+        from board
+        where university_id = #{universityId}
+    </select>
+
+    <!--  3일전에 쓴 글을 제외하고 이후에 쓴 최신 글들 -> totalPost -->
+    <select id="findPopularBoard" resultType="com.teamproject.StudentCommunity.dto.board.BoardCategoryDto">
+                                                                                    <!--date_add(now(), interval -3 day)  3일전 -->
+        select b.*,(select count(*) from post as p where p.board_id=b.id and p.created_at >date_add(now(), interval -3 day) ) as totalPost,
+               c.name as name
+        from board as b
+        join category as c on b.category_id = c.id
+        where b.university_id = #{universityId}
+        order by totalPost desc, c.id
+        limit 0,6;
+    </select>
+
+    <select id="findWithCategoryByUniversityId" resultType="com.teamproject.StudentCommunity.dto.board.BoardCategoryDto">
+    select b.id,c.name,c.description,b.university_id , b.category_id
+    from board as b join category as c where b.category_id = c.id
+    and b.university_id = #{universityId}
+    order by b.category_id asc;
+    </select>
+
+    <insert id="insertBoard" parameterType="com.teamproject.StudentCommunity.dto.board.BoardDto" >
+        insert into
+                board
+        values (
+                0,#{universityId},#{categoryId}
+                );
+    </insert>
+
+</mapper>

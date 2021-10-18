@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+.btn{
+   color: white;
+   background: #46cfa7;
+   cursor:pointer;
+}
+.btn:hover{
+   background: #45be98;
+}
+
+.stop-btn{
+   background: #cf5b46;
+}
+.stop-btn:hover{
+   background: #c25b48;
+}
+
+.continue-btn{
+   background: #beab48;
+}
+.continue-btn:hover{
+   background: #ac993b;
+}
+

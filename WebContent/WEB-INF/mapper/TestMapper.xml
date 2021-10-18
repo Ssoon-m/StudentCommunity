@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+<mapper namespace="com.teamproject.StudentCommunity.mapper.TestMapper">
+
+	<resultMap type="com.teamproject.StudentCommunity.dto.TestDto" id="TestResult"> 
+		<result property="userNo" 	column = "user_no"/>  
+		<result property="userName" 	column = "user_name"/>  
+	</resultMap>
+
+	<!--  id는 Mapper메서드 이름 -->
+	<select id="test" resultMap="TestResult">
+		SELECT 
+			user_name
+		FROM 
+			usertable 
+		WHERE user_no = #{user_no}
+	</select>
+	
+</mapper>

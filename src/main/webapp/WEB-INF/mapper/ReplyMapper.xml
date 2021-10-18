@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.ReplyDAO">
+
+    <select id="findByReplyPaging" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyDTO"
+    parameterType="com.teamproject.StudentCommunity.dto.reply.ReplyPagingDTO">
+        select r.*,m.name,m.img ,(select re.member_id from reply as re where re.id = r.parent) as parentMemberId
+        from reply as r
+        join member as m
+        where  m.id = r.member_id
+        and r.post_id = #{postId}
+        order by if(isnull(r.parent),r.id,r.parent),r.id
+        limit #{startNo},#{limit}
+        </select>
+
+    <select id="countByPostId" resultType="int" parameterType="Long">
+        select count(*)
+        from reply
+        where post_id = #{postId}
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyDTO" parameterType="Long">
+        select * from reply
+        where id = #{id}
+    </select>
+
+    <select id="findByParentId" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyDTO" parameterType="Long">
+        select * from reply
+        where parent = #{parentId}
+    </select>
+
+    <insert id="newReply" parameterType="com.teamproject.StudentCommunity.dto.reply.NewReply">
+
+        insert into reply (content,parent,anonymous,created_at,post_id,member_id)
+        values (#{content},#{parent},#{anonymous},#{createdAt},#{postId},#{memberId})
+
+    </insert>
+
+
+    <update id="goodReportPlus" parameterType="com.teamproject.StudentCommunity.dto.replyDetail.ReplyDetailDTO">
+        update reply set ${status} = reply.${status}+1
+        where id = #{replyId}
+    </update>
+
+    <update id="goodReportMinus" parameterType="com.teamproject.StudentCommunity.dto.replyDetail.ReplyDetailDTO">
+        update reply set ${status} = reply.${status}-1
+        where id = #{replyId}
+    </update>
+
+    <update id="updateReply" parameterType="com.teamproject.StudentCommunity.dto.reply.ReplyUpdateDTO">
+        update reply
+        set content = #{content},updated_at = #{updatedAt}
+        where id=#{id}
+    </update>
+
+
+    <update id="deleteReplyStatus">
+        update reply set status = #{status}
+        where id=#{id}
+    </update>
+
+    <delete id="deleteReply" parameterType="Long">
+        delete from reply
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteReplyAdmin" parameterType="Long">
+        delete from reply
+        where id = #{id}
+    </delete>
+
+    <select id=" ">
+        select * from reply;
+    </select>
+	
+	<update id="readableSettingByPostID" parameterType="Long">
+		update reply set readable="READ" where post_id = #{post_id} and parent is null; 
+	</update>
+	
+	<update id="readableSettingByMemberID" parameterType="Long">
+		update reply set readable="READ" where post_id in (select id from post where member_id = #{member_id}) and parent is null and member_id != #{member_id};
+	</update>
+	
+	<update id="readableSettingByReplyID">
+		update reply set readable="READ" where parent = #{reply_id};
+	</update>
+	
+	<update id="readableSettingByMemberIDtoReply" parameterType="Long">
+		update reply set readable="READ" where parent in (select pid.id from (select * from reply where member_id=#{member_id}) pid);
+	</update>
+	
+	<select id="getReplyMessageCount" parameterType="Long" resultType="Integer">
+		select count(distinct post_id) from reply where post_id in (select id from post where member_id=#{member_id}) and readable="NOT_READ" and parent is null and member_id != #{member_id};
+	</select>
+	
+	<select id="getReReplyMessageCount" parameterType="Long" resultType="Integer">
+		select count(distinct p.id) from MyReplyNewReReplyView m left join post p on p.id = m.postId where m.replyMemberId = #{member_id};
+	</select>
+
+    <select id="replyList" parameterType="com.teamproject.StudentCommunity.dto.PageDTO" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyBoardMemberDTO">
+        select r.id,  r.content, r.good, r.report, r.created_at, m.status , m.university_id , m.email, b.category_id
+        from reply r inner join post p on r.post_id = p.id
+        inner join board b on p.board_id = b.id inner join member m on r.member_id = m.id
+
+        <if test=' date1 != "" and date2 != "" '>
+            <if test= "date1 != null and date2 != null">
+                <![CDATA[
+				where
+					DATE_FORMAT(r.created_at,'%Y%m%d')
+				BETWEEN
+					DATE_FORMAT(#{date1},'%Y%m%d')
+				AND
+					DATE_FORMAT(#{date2},'%Y%m%d')
+				]]>
+            </if>
+        </if>
+        and r.status!='DELETED_ADMIN'
+
+        <if test="reply == 0">
+            and parent is null
+        </if>
+        <if test="reply == 1">
+            and parent is not null
+        </if>
+
+        <if test="showSuspend == 0">
+            and m.status = "ACTIVE"
+        </if>
+        <if test="showSuspend == 1">
+            and m.status = "DE_ACTIVE"
+        </if>
+        <if test='selectUniversity != null and selectUniversity != "" '>
+            and m.university_id = #{selectUniversity}
+        </if>
+        <if test='category != null and category != "" '>
+            and b.category_id = #{category}
+        </if>
+        <if test=' input != null and input != "" '>
+            <if test='select =="content"'>
+                and r.content like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+                and m.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+        <if test="likeRank == 1">
+            order by r.good desc
+        </if>
+        <if test="suspendRank == 1">
+            order by r.report desc
+        </if>
+        <if test="regDateRank == 1">
+            order by r.created_at desc
+        </if>
+        limit #{firstRecordIndex},#{lastRecordIndex};
+    </select>
+
+	<select id="getMyPostNewReplyList" parameterType="com.teamproject.StudentCommunity.dto.reply.ReplyPagingDTO" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyPostDTO">
+		select p.title, p.board_id as boardId, p.id as postId, p.created_at as postCreatedAt, m.content, m.created_at as replyCreatedAt
+		from post as p inner join MyPostNewReplyView as m on p.id = m.post_id
+		where p.member_id = #{memberId} and m.member_id != #{memberId}
+		order by replyCreatedAt desc
+		limit #{startNo}, #{limit};
+	</select>
+
+	<select id="getMyReplyNewReReplyList" parameterType="com.teamproject.StudentCommunity.dto.reply.ReplyPagingDTO" resultType="com.teamproject.StudentCommunity.dto.reply.ReReplyPostDTO">
+		select p.id as postId, m.idOfReply as replyId, m.idOfReReply as reReplyId, p.board_id as boardId, p.title as title, m.reply as reply, m.reReply as reReply, p.created_at as postCreatedAt, m.replyCreatedAt as replyCreatedAt, m.reReplyCreatedAt as reReplyCreatedAt, m.replyMemberId as replyMemberId, m.reReplyMemberId as reReplyMemberId 
+		from MyReplyNewReReplyView m left join post p on p.id = m.postId 
+		where m.replyMemberId = #{memberId} and m.reReplyMemberId != #{memberId}
+		order by replyCreatedAt desc
+		limit #{startNo}, #{limit};
+	</select>
+
+    <select id="replyListCount" parameterType ="com.teamproject.StudentCommunity.dto.PageDTO" resultType="int">
+        select
+            COUNT(*)
+        from reply r inner join post p on r.post_id = p.id
+        inner join board b on p.board_id = b.id inner join member m on r.member_id = m.id
+        <if test=' date1 != "" and date2 != "" '>
+            <if test= "date1 != null and date2 != null">
+                <![CDATA[
+				where
+					DATE_FORMAT(r.created_at,'%Y%m%d')
+				BETWEEN
+					DATE_FORMAT(#{date1},'%Y%m%d')
+				AND
+					DATE_FORMAT(#{date2},'%Y%m%d')
+				]]>
+            </if>
+        </if>
+        and r.status!='DELETED_ADMIN'
+	    and parent is null
+
+        <if test="showSuspend == 0">
+            and m.status = "ACTIVE"
+        </if>
+        <if test="showSuspend == 1">
+            and m.status = "DE_ACTIVE"
+        </if>
+
+        <if test='selectUniversity != null and selectUniversity != "" '>
+            and m.university_id =#{selectUniversity}
+        </if>
+        <if test='category != null and category != "" '>
+            and b.category_id =#{category};
+        </if>
+        <if test=' input != null and input != "" '>
+            <if test='select =="content"'>
+                and r.content like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+                and m.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+
+    </select>
+
+    <select id="getAllContentEmail" resultType="com.teamproject.StudentCommunity.dto.reply.ReplyBoardMemberDTO">
+        select content,email from reply r inner join member m on r.member_id = m.id ;
+    </select>
+
+
+</mapper>

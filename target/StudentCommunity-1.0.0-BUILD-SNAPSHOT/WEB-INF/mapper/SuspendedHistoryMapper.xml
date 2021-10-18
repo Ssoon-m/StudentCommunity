@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.SuspendedHistoryDAO">
+
+    <select id="getEndOn" resultType="com.teamproject.StudentCommunity.dto.SuspendedHistoryDTO">
+        select 
+        	* 
+        from 
+        	suspended_history;
+    </select>
+
+	<delete id="deleteHistory" parameterType="long">
+		delete from suspended_history where member_id = #{memberId};
+	</delete>
+    
+    <insert id="setSuspendDate" parameterType="com.teamproject.StudentCommunity.dto.SuspendedHistoryDTO">
+    	insert into 
+    		suspended_history
+    	values(
+    			0,
+    			#{endOn},
+    			#{reason},
+    			#{memberId}
+    		   );
+    </insert>
+    
+    <select id="getPostMemberCountAll"  parameterType="com.teamproject.StudentCommunity.dto.PageDTO" resultType="int">
+    	select 
+    		count(*) 
+    	from 
+    		post as post 
+    	inner join 
+    		member as mem 
+    	on 
+    		post.member_id  = mem.id
+    	inner join 
+			board as board
+		on
+			post.board_id = board.id 
+    		
+   		<if test=' date1 != "" and date2 != "" '>
+    		<if test= "date1 != null and date2 != null">
+			<![CDATA[
+			where 
+				DATE_FORMAT(post.created_at,'%Y%m%d')
+			BETWEEN 
+				DATE_FORMAT(#{date1},'%Y%m%d') 
+			AND 
+				DATE_FORMAT(#{date2},'%Y%m%d') 
+			]]>
+			</if>
+		</if>
+		
+		<if test="showSuspend == 0">
+			and mem.status = "ACTIVE"
+		</if>
+		
+		<if test="showSuspend == 1">
+			and mem.status = "DE_ACTIVE"
+		</if>
+		
+		 <if test='selectUniversity != null and selectUniversity != "" '>
+        	and mem.university_id = #{selectUniversity}
+        </if>
+        
+        <if test='category != null and category != "" '>
+        	and board.category_id = #{category}
+        </if>
+		
+		<if test='input != null and input != "" '>
+            <if test='select =="title"'>
+               and post.title like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="titleContent"'>
+                and (post.title like CONCAT('%',#{input},'%') or post.content like CONCAT('%',#{input},'%'))
+            </if>
+
+            <if test='select =="content"'>
+                and post.content like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+            	and mem.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+		             
+    </select>
+    
+    <select id="getSuspendList" parameterType="com.teamproject.StudentCommunity.dto.PageDTO" 
+    			resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO">
+    	select 
+		  post.board_id, post.title, mem.email , post.created_at,
+		  post.updated_at, post.id, post.report, 
+		  post.member_id, mem.status, mem.university_id,
+		  board.category_id 
+		   
+		from 
+		 	post as post 
+		inner join 
+		 	member as mem 
+		on 
+		 	post.member_id  = mem.id
+		inner join 
+			board as board
+		on
+			post.board_id = board.id 	
+		 	
+	 	<if test=' date1 != "" and date2 != "" '>
+			<if test= "date1 != null and date2 != null">
+				<![CDATA[
+				where 
+					DATE_FORMAT(post.created_at,'%Y%m%d')
+				BETWEEN 
+					DATE_FORMAT(#{date1},'%Y%m%d') 
+				AND 
+					DATE_FORMAT(#{date2},'%Y%m%d') 
+				]]>
+			</if>
+		</if> 
+		
+		<if test="showSuspend == 0">
+			and mem.status = "ACTIVE"
+		</if>
+		
+		<if test="showSuspend == 1">
+			and mem.status = "DE_ACTIVE"
+		</if>
+		
+		<if test=' input != null and input != "" '>
+            <if test='select =="title"'>
+               and post.title like CONCAT('%',#{input},'%')
+            </if>
+
+            <if test='select =="titleContent"'>
+                and (post.title like CONCAT('%',#{input},'%') or post.content like CONCAT('%',#{input},'%'))
+            </if>
+
+            <if test='select =="content"'>
+                and post.content like CONCAT('%',#{input},'%')
+            </if>
+            <if test='select == "writer"'>
+            	and mem.email like CONCAT('%',#{input},'%')
+            </if>
+        </if>
+        
+        <if test='selectUniversity != null and selectUniversity != "" '>
+        	and mem.university_id = #{selectUniversity}
+        </if>
+        
+         <if test='category != null and category != "" '>
+        	and board.category_id = #{category}
+        </if>
+		
+		<if test="likeRank == 1">
+			order by post.good desc
+		</if>
+		
+		<if test="suspendRank == 1">
+			order by post.report desc
+		</if>
+		<if test="regDateRank == 1">
+			order by post.created_at desc
+		</if>
+		
+		
+		limit #{firstRecordIndex},#{lastRecordIndex};
+		
+    </select>
+
+	<select id="getSuspendedInfoByID" parameterType="Long" resultType="com.teamproject.StudentCommunity.dto.SuspendedHistoryDTO">
+		select * from suspended_history where member_id=#{id};
+	</select>
+
+	<select id="autoSearch" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO">
+		select * from post as post inner join member as mem on post.member_id = mem.id inner join board as board on post.board_id = board.id
+	</select>
+
+	<select id="autoSearchMember" resultType="com.teamproject.StudentCommunity.dto.post.PostMemberDTO">
+		select email,name from member where id in (select member_id from post);
+	</select>
+
+</mapper>

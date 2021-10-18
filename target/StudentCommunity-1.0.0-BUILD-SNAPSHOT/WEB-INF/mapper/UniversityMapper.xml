@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.teamproject.StudentCommunity.mapper.UniversityDAO">
+
+    
+    <select id="universityList" resultType="com.teamproject.StudentCommunity.dto.University.UniversityDTO">
+	 
+  		select 
+  			name 
+  		from 
+  			university 
+  			
+  			
+	 </select>
+	 
+	  <select id="universityId" resultType="long" parameterType="string">
+	 
+  		select 
+  			id
+  		from 
+  			university
+  		where name = #{name}
+  			
+	 </select>
+
+  <select id="findAll" resultType="com.teamproject.StudentCommunity.dto.University.UniversityDTO">
+        select  *
+        from university
+    </select>
+
+    <select id="findById" resultType="com.teamproject.StudentCommunity.dto.University.UniversityDTO">
+        select  *
+        from university
+        where id = #{id}
+    </select>
+<select id="getUniversityNameByID" resultType="java.lang.String" parameterType="Long">
+        select  name
+        from university
+        where id = #{id}
+    </select>
+
+    <insert id="insertUniversity" parameterType="string">
+        insert into university values (0,#{name});
+    </insert>
+
+    <delete id="deleteUniversity" parameterType="long">
+        delete from university where id=#{id}
+    </delete>
+
+
+
+
+</mapper>
